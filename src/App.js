@@ -8,7 +8,6 @@ import qs from 'qs';
 import Blockies from '@pacta-app/react-blockies';
 import sha256 from 'crypto-js/sha256';
 import hex from 'crypto-js/enc-hex';
-import ReactTooltip from 'react-tooltip';
 import {
     faArrowUp,
     faArrowDown,
@@ -20,8 +19,6 @@ import {
 } from "@fortawesome/pro-regular-svg-icons";
 import FancyButton from "./FancyButton";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-
-const CREATOR = "5a8b510c61c1bc530da5456aeea3ec0792918b2aa9d78b8b3d2c63bbff512bb0";
 
 class App extends React.Component {
     constructor(props) {
@@ -198,10 +195,6 @@ class App extends React.Component {
         this.setState({votes: true});
     }.bind(this);
 
-    shouldComponentUpdate(nextProps, nextState, nextContext) {
-        return true;
-    }
-
     showYoutubeBasedFeatures() {
         let hasVid = this.state.video && this.state.video !== "unloaded";
         let voted = hasVid && (parseFloat(this.state.video.upvotes) + parseFloat(this.state.video.downvotes) > 0);
@@ -215,12 +208,8 @@ class App extends React.Component {
                 <p>Liked: {(parseFloat(this.state.video.upvotes) / (parseFloat(this.state.video.upvotes) + parseInt(this.state.video.downvotes)) * 100).toFixed(0)} %</p>
             </div> : <div className="votes-info"><p>Upvotes: 0</p><p>Downvotes: 0</p><p>Liked: 0%</p></div>}
 
-            <FancyButton iconElement={hasVid ? <span data-tip={this.state.video.submitter === CREATOR ? this.state.video.submitter + " ⭐" : this.state.video.submitter}><Blockies seed={this.state.video.submitter} size={8} /></span> : <span className="blockies" /> } enabled={hasVid} onClick={this.backOnClick}>Contributor</FancyButton>
+            <FancyButton iconElement={hasVid ? <span><Blockies seed={this.state.video.submitter} size={8} /></span> : <span className="blockies" /> } enabled={hasVid} onClick={this.backOnClick}>Contributor</FancyButton>
         </React.Fragment>);
-    }
-
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        ReactTooltip.rebuild();
     }
 
     canBack = function () {
@@ -327,14 +316,13 @@ class App extends React.Component {
                     {this.showYoutubeBasedFeatures()}
                     <FancyButton icon={this.state.autoplay ? faCheck : faTimes} enabled onClick={this.toggleAutoplay}>Autoplay</FancyButton>
                     <FancyButton icon={faPlus} enabled onClick={this.toggleSubmitDialog}>Submit Video</FancyButton>
-                    <FancyButton onClick={this.toggleUserDialog} iconElement={<Blockies data-tip={this.state.nameIdenticon} seed={this.state.nameIdenticon} size={8} />} enabled><span data-html={true}>Account</span></FancyButton>
+                    <FancyButton onClick={this.toggleUserDialog} iconElement={<Blockies seed={this.state.nameIdenticon} size={8} />} enabled><span>Account</span></FancyButton>
                     {this.videos ? <div className="votes-info"><p>Videos Loaded: {this.videos.length}</p></div> : ""}
                     <div className="votes-info">
                         <p><a href="https://github.com/Snaddyvitch-Dispenser" rel="noopener noreferrer" target="_blank">Developer</a></p>
                         <p><a href="https://www.youtube.com/channel/UCMI6jMTU7c0KfXJYRA3RPpQ" rel="noopener noreferrer" target="_blank">Inventor</a></p>
                     </div>
                 </nav>
-                <ReactTooltip effect="solid" place="right" />
             </div>
         );
     }
