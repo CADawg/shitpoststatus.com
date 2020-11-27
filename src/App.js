@@ -15,7 +15,8 @@ import {
     faStepForward,
     faPlus,
     faTimes,
-    faCheck, faEye
+    faCheck,
+    faEye
 } from "@fortawesome/pro-regular-svg-icons";
 import FancyButton from "./FancyButton";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -153,7 +154,14 @@ class App extends React.Component {
         if (this.state.video === "unloaded") {
             return <div className="youtube-box"><div><div className="yt-loading-bb" /></div></div>;
         } else if (this.state.video) {
-            return (<div className="youtube-box"><YouTube onPlay={this.setYtPlayer} id="shit_post_status_vid" videoId={this.state.video.id} opts={{playerVars: {autoplay: 1}}} onError={this.onVidEnd} onEnd={this.onVidEnd}/></div>);
+            return (<div className="youtube-box">
+                <h1>Shitpost Status</h1>
+                <p>This is the text behind the video player, which plays shit post status (shitpost status) videos automatically.</p>
+                <p>If you're seeing this, I've probably coded something wrong... sorry!</p>
+                <p>Want to watch Shitpost Status videos, but without having to click through or wait a few seconds each time? If so, shitpost status is for you. I made this project with a friend as I was fed up of having the experience interrupted by the flow of youtube and I wanted it to feel more like a true compilation.</p>
+                <p>An online Massively Multiplayer Youtube Compilation. Contribute and people will see your user icon when they play a shitpost status video you submitted!</p>
+                <YouTube containerClassName="vid_box_box" onPlay={this.setYtPlayer} id="shit_post_status_vid" videoId={this.state.video.id} opts={{playerVars: {autoplay: 1}}} onError={this.onVidEnd} onEnd={this.onVidEnd}/>
+            </div>);
         } else {
             return (<div className="no-more-youtube-box">
                 <h1>We've run out of videos to show you!</h1>
@@ -320,7 +328,6 @@ class App extends React.Component {
                     {this.videos ? <div className="votes-info"><p>Videos Loaded: {this.videos.length}</p></div> : ""}
                     <div className="votes-info">
                         <p><a href="https://github.com/Snaddyvitch-Dispenser" rel="noopener noreferrer" target="_blank">Developer</a></p>
-                        <p><a href="https://www.youtube.com/channel/UCMI6jMTU7c0KfXJYRA3RPpQ" rel="noopener noreferrer" target="_blank">Inventor</a></p>
                     </div>
                 </nav>
             </div>

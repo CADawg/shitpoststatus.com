@@ -47,6 +47,20 @@ body {
 .youtube-box {
     height: $yt-height;
     width: 100%;
+    position: relative;
+
+    h1, p {
+        margin: 0;
+        color: white;
+    }
+
+    div.vid_box_box {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        left: 0;
+    }
 
     div {
         height: 100%;
