@@ -11,7 +11,7 @@ router.get('/get', async function(req, res, next) {
     if (req.query.id === undefined) req.query.id = null;
 
     try {
-        const [rows] = await dbPool.query("SELECT videos.videoid, submitter, SUM(IF(upvotes.weight = 1, 1, 0)) AS upvotes, SUM(IF(upvotes.weight = -1, 1, 0)) AS downvotes, SUM(IF( upvotes.voter = ?, upvotes.weight, 0)) AS myvoteweight FROM `videos` LEFT JOIN upvotes ON upvotes.videoid = videos.videoid WHERE videos.mod_hidden = 0 GROUP BY videos.videoid;", [req.query.id]);
+        const [rows] = await dbPool.query("SELECT videos.videoid, submitter, SUM(IF(upvotes.weight = 1, 1, 0)) AS upvotes, SUM(IF(upvotes.weight = -1, 1, 0)) AS downvotes, SUM(IF( upvotes.voter = ?, upvotes.weight, 0)) AS myvoteweight FROM `videos` LEFT JOIN upvotes ON upvotes.videoid = videos.videoid WHERE videos.mod_hidden = 0 and videos.errored = 0 GROUP BY videos.videoid;", [req.query.id]);
 
         const json = [];
 
@@ -70,6 +70,9 @@ router.post("/vote", async function(req, res, next) {
 
 router.post("/submit", async function(req, res, next) {
     let {id, video} = req.body;
+
+    if (video === "") return res.send("Please enter a video link!").end();
+
     try {
         if (!anyUndefined(id, video)) {
             const ytIds = video.match(YouTubeRegex);
@@ -92,7 +95,7 @@ router.post("/submit", async function(req, res, next) {
                     return res.send("This video can't be played here due to restrictions by YouTube.").end();
                 }
             } catch (e) {
-                res.send("Failed to connect to YouTube to get video info.").end();
+                return res.send("Failed to connect to YouTube to get video info.").end();
             }
 
             if (id.length <= 3 || id.length >= 37) return res.send("You're not signed in as a valid user.").end();
@@ -101,61 +104,47 @@ router.post("/submit", async function(req, res, next) {
 
             if (rows.length === 0) {
                 await dbPool.query("INSERT INTO videos (videoid, submitter) VALUES (?, ?);", [video, id]);
-                res.send("Thank you, your video has been added!").end();
+                return res.send("Thank you, your video has been added!").end();
             } else {
-                res.send("Somebody else has already added that video.").end();
+                return res.send("Somebody else has already added that video.").end();
             }
         } else {
-            res.send("Details missing!").end();
+            return res.send("Details missing!").end();
         }
     } catch(e) {
         return res.send("An unexpected error occurred!").end();
     }
 });
 
-router.post("/submit", async function(req, res, next) {
-    let {id, video} = req.body;
+
+router.post("/error", async function(req, res, next) {
+    let {video} = req.body;
     try {
-        if (!anyUndefined(id, video)) {
+        if (!anyUndefined(video)) {
             const ytIds = video.match(YouTubeRegex);
 
             if (ytIds !== null) {
                 video = ytIds[1] || ytIds[2] || ytIds[3];
-                if (video.length !== 11) return res.send("Couldn't get youtube video ID from URL.").end();
+                if (video.length !== 11) return res.end();
             } else {
-                return res.send("Couldn't get youtube video ID from URL.").end();
+                return res.end();
             }
 
             try {
                 const videoInfo = await YouTubeDownloader.getInfo(video);
 
-                if (parseInt(videoInfo.videoDetails.lengthSeconds) > 120) {
-                    return res.send("Videos can't be longer than 2 Minutes.").end();
-                }
+                console.log(videoInfo);
 
                 if (!videoInfo.player_response.playabilityStatus.playableInEmbed) {
-                    return res.send("This video can't be played here due to restrictions by YouTube.").end();
+                    await dbPool.query("UPDATE videos SET errored = 1 WHERE videoid=?", [video]);
                 }
             } catch (e) {
-                res.send("Failed to connect to YouTube to get video info.").end();
+                await dbPool.query("UPDATE videos SET errored = 1 WHERE videoid=?", [video]);
             }
-
-            if (id.length <= 3 || id.length >= 37) return res.send("You're not signed in as a valid user.").end();
-
-            const [rows] = await dbPool.query("SELECT * FROM videos WHERE videoid=?", [video]);
-
-            if (rows.length === 0) {
-                await dbPool.query("INSERT INTO videos (videoid, submitter) VALUES (?, ?);", [video, id]);
-                res.send("Thank you, your video has been added!").end();
-            } else {
-                res.send("Somebody else has already added that video.").end();
-            }
-        } else {
-            res.send("Details missing!").end();
         }
-    } catch(e) {
-        return res.send("An unexpected error occurred!").end();
-    }
+    } catch(e) {}
+
+    res.header("X-Thank-You", "Thank you!").send("thanks").end();
 });
 
 module.exports = router;

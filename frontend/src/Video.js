@@ -90,18 +90,23 @@ class Video extends React.Component {
         return false;
     }
 
-    nextVideo = function(useAll = false) {
+    nextVideo = function(useAll = false, popCurrent = false) {
         // TODO: Add a way for videos to be excluded from next video but still loaded for history's sake (history only keeps id's so needs full records)
         // Actually it doesn't - we could just load the video using it's id but have 0 votes and make it unvoteable.
         let next;
         if (this.state.vidIndex >= this.state.history.length - 1 || useAll === true) {
             next = useAll === true ? this.randomAll() : this.randomUnwatched();
             if (next) {
+                let addToVidIndex = 1;
                 let history = useAll === true ? [] : this.state.history;
+                if (popCurrent) { // delete current bc errored
+                    history.pop();
+                    addToVidIndex = 0;
+                }
                 history.push(next.id);
                 store.set("history", history);
                 window.history.pushState({video: next.id}, "", "?v=" + next.id);
-                this.setState({history: history, vidIndex: this.state.vidIndex + 1, video: next});
+                this.setState({history: history, vidIndex: this.state.vidIndex + addToVidIndex, video: next});
             } else {
                 window.history.pushState({video: null}, "", "?");
                 this.setState({video: null, vidIndex: this.state.vidIndex + 1});
@@ -134,10 +139,10 @@ class Video extends React.Component {
         return unwatched;
     }
 
-    onVidEnd = function () {
+    onVidEnd = function (wasDueToError = false) {
         if (this.state.video.id !== null) {
             if (this.state.autoplay) {
-                this.nextVideo();
+                this.nextVideo(false, wasDueToError);
             }
         }
     }.bind(this);
@@ -151,6 +156,13 @@ class Video extends React.Component {
         store.remove("history");
     }.bind(this);
 
+    onError = function() {
+        const fd = new FormData();
+        fd.set("video", this.state.video.id);
+        axios.post("/videos/error", fd).then(() => console.log("Error Reported!"));
+        this.onVidEnd(true);
+    }.bind(this);
+
     showYoutube() {
         if (this.state.video === "unloaded") {
             return <div className="youtube-box"><div><div className="yt-loading-bb" /></div></div>;
@@ -161,7 +173,7 @@ class Video extends React.Component {
                 <p>If you're seeing this, I've probably coded something wrong... sorry!</p>
                 <p>Want to watch Shitpost Status videos, but without having to click through or wait a few seconds each time? If so, shitpost status is for you. I made this project with a friend as I was fed up of having the experience interrupted by the flow of youtube and I wanted it to feel more like a true compilation.</p>
                 <p>An online Massively Multiplayer Youtube Compilation. Contribute and people will see your user icon when they play a shitpost status video you submitted!</p>
-                <YouTube containerClassName="vid_box_box" onPlay={this.setYtPlayer} id="shit_post_status_vid" videoId={this.state.video.id} opts={{playerVars: {autoplay: 1}, host: "https://www.youtube-nocookie.com"}} onError={this.onVidEnd} onEnd={this.onVidEnd}/>
+                <YouTube containerClassName="vid_box_box" onPlay={this.setYtPlayer} id="shit_post_status_vid" videoId={this.state.video.id} opts={{playerVars: {autoplay: 1}, host: "https://www.youtube-nocookie.com"}} onError={this.onError} onEnd={this.onVidEnd}/>
             </div>);
         } else {
             return (<div className="no-more-youtube-box">
@@ -259,12 +271,8 @@ class Video extends React.Component {
         fd.set("video", this.state.submitLink);
         const response = await axios.post("/videos/submit", fd);
         console.log(response.data);
-        if (response.data === true) {
-            this.setState({submitLink: "", submitResponse: "Successfully Added! Thanks!"});
-        } else if (response.data === false) {
-            this.setState({submitResponse: "Couldn't add - Please check the link!"});
-        } else {
-            this.setState({submitLink: "", submitResponse: "We already have this link, so you can't submit it!"});
+        if (response.data) {
+            this.setState({submitLink: "", submitResponse: response.data});
         }
     }
 
