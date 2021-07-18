@@ -53,7 +53,7 @@ class Video extends React.Component {
     }
 
     async componentDidMount() {
-        this.videos = (await axios.get("https://api.shitpoststatus.com/getvideos.php", {params: {id: this.state.uuid}})).data || [];
+        this.videos = (await axios.get("/videos/get", {params: {id: this.state.uuid}})).data || [];
 
         if (this.vidid) {
             let fvb = this.findVideoById(this.vidid);
@@ -191,7 +191,7 @@ class Video extends React.Component {
         fd.set("weight", weight);
         fd.set("id", this.state.uuid);
         fd.set("video", this.state.video.id);
-        const request = await axios.post("https://api.shitpoststatus.com/vote.php", fd);
+        const request = await axios.post("/videos/vote", fd);
         if (request.data !== false) {
             if (["-1", "0", "1"].includes(request.data.toString())) {
                 if (this.state.video.id === vid_id) {
@@ -257,7 +257,7 @@ class Video extends React.Component {
         const fd = new FormData();
         fd.set("id", this.state.uuid);
         fd.set("video", this.state.submitLink);
-        const response = await axios.post("https://api.shitpoststatus.com/submit.php", fd);
+        const response = await axios.post("/videos/submit", fd);
         console.log(response.data);
         if (response.data === true) {
             this.setState({submitLink: "", submitResponse: "Successfully Added! Thanks!"});

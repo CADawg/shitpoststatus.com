@@ -8,9 +8,6 @@ frontend/.pnp.js
 # testing
 frontend/coverage
 
-# production
-frontend/build
-
 # misc
 frontend/.DS_Store
 frontend/.env.local
@@ -24,3 +21,11 @@ frontend/yarn-error.log*
 
 .idea
 
+backend/node_modules
+backend/.idea
+
+frontend/.idea
+
+backend/.env
+
+frontend/.npmrc

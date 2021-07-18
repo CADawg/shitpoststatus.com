@@ -27,7 +27,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "cd public && move index.php index.html && cd .. && react-scripts build && cd build && move index.html index.php && cd .. && cd public && move index.html index.php",
+    "build": "react-scripts ../backend/public",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
