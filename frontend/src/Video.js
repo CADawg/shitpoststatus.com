@@ -100,8 +100,11 @@ class Video extends React.Component {
                 let addToVidIndex = 1;
                 let history = useAll === true ? [] : this.state.history;
                 if (popCurrent) { // delete current bc errored
-                    history.pop();
-                    addToVidIndex = 0;
+                    let index = history.indexOf(this.state.video.id);
+                    if (index > -1) {
+                        history.splice(index, 1);
+                        addToVidIndex = 0;
+                    }
                 }
                 history.push(next.id);
                 store.set("history", history);
