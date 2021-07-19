@@ -90,7 +90,7 @@ class Video extends React.Component {
         return false;
     }
 
-    nextVideo = function(useAll = false, popCurrent = false) {
+    nextVideo = function(useAll = false) {
         // TODO: Add a way for videos to be excluded from next video but still loaded for history's sake (history only keeps id's so needs full records)
         // Actually it doesn't - we could just load the video using it's id but have 0 votes and make it unvoteable.
         let next;
@@ -99,13 +99,14 @@ class Video extends React.Component {
             if (next) {
                 let addToVidIndex = 1;
                 let history = useAll === true ? [] : this.state.history;
-                if (popCurrent) { // delete current bc errored
-                    let index = history.indexOf(this.state.video.id);
-                    if (index > -1) {
-                        history.splice(index, 1);
-                        addToVidIndex = 0;
-                    }
-                }
+                // This code seems to break history more than I'd like
+                //if (popCurrent) { // delete current bc errored
+                //    let index = history.indexOf(this.state.video.id);
+                //    if (index > -1) {
+                //        history.splice(index, 1);
+                //        addToVidIndex = 0;
+                //    }
+                //}
                 history.push(next.id);
                 store.set("history", history);
                 window.history.pushState({video: next.id}, "", "?v=" + next.id);
@@ -142,10 +143,10 @@ class Video extends React.Component {
         return unwatched;
     }
 
-    onVidEnd = function (wasDueToError = false) {
+    onVidEnd = function () {
         if (this.state.video.id !== null) {
             if (this.state.autoplay) {
-                this.nextVideo(false, wasDueToError);
+                this.nextVideo();
             }
         }
     }.bind(this);
@@ -163,7 +164,7 @@ class Video extends React.Component {
         const fd = new FormData();
         fd.set("video", this.state.video.id);
         axios.post("/videos/error", fd).then(() => console.log("Error Reported!"));
-        this.onVidEnd(true);
+        this.onVidEnd();
     }.bind(this);
 
     showYoutube() {
