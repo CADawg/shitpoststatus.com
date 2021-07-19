@@ -341,6 +341,7 @@ class Video extends React.Component {
                     <div className="votes-info">
                         <p><a href="https://github.com/Snaddyvitch-Dispenser" rel="noopener noreferrer" target="_blank">Developer</a></p>
                         <p><a href="https://discord.gg/AKh4mwGsRz" rel="noopener noreferrer" target="_blank">Discord</a></p>
+                        <p><a href="https://peakd.com/@shitpoststatus" rel="noopener noreferrer" target="_blank">Blog</a></p>
                     </div>
                 </nav>
             </div>

@@ -12,35 +12,7 @@
     <meta name="twitter:site" content="Shitpost Status">
     <script async defer src="https://oksouhh.shitpoststatus.com/latest.js"></script>
     <noscript><img src="https://oksouhh.shitpoststatus.com/noscript.gif" alt=""/></noscript>
-    <?php if (isset($_GET["v"])) { ?>
-        <meta name="twitter:card" content="player">
-        <meta name="twitter:url" content="https://shitpoststatus.com/watch?v=~~videoId~~">
-        <meta property="og:url" content="https://shitpoststatus.com/watch?v=~~videoId~~">
-        <meta property="og:image" content="https://i.ytimg.com/vi/~~videoId~~/hqdefault.jpg">
-        <meta property="og:image:width" content="480">
-        <meta property="og:image:height" content="360">
-        <meta property="og:description" content="">
-        <meta property="og:video:type" content="text/html">
-        <meta property="og:video:url" content="https://www.youtube.com/embed/~~videoId~~">
-        <meta property="og:video:secure_url" content="https://www.youtube.com/embed/~~videoId~~">
-        <meta property="og:video:height" content="720">
-        <meta property="twitter:player" content="https://www.youtube.com/embed/~~videoId~~">
-        <meta property="twitter:secureurl:player_url" content="https://www.youtube.com/embed/~~videoId~~" />
-        <meta property="twitter:player:height" content="720">
-        <meta property="og:video:width" content="960">
-        <meta property="twitter:player:width" content="960">
-        <meta property="og:type" content="video.other">
-    <?php } else { ?>
-        <meta name="twitter:card" content="summary">
-        <meta name="twitter:image" content="https://shitpoststatus.com/logo512.png">
-        <meta name="twitter:description" content="Watch all of the shitpost status videos and contribute your own with the Massively Multiplayer Online Shitpost Status Compilation!">
-        <meta name="twitter:creator" content="@_CADawg">
-        <meta property="og:url" content="https://shitpoststatus.com">
-        <meta property="og:description" content="Watch all of the shitpost status videos and contribute your own with the Massively Multiplayer Online Shitpost Status Compilation!">
-        <meta property="og:type" content="video.other">
-        <meta property="og:image" content="https://shitpoststatus.com/logo512.png">
-      <?php
-    } ?>
+    <!-- special meta goes here (from specialmeta.ejs) react doesn't like to compile it though -->
     <meta
       name="description"
       content="Watch all of the Shitpost Status Videos! The Massively Multiplayer Online Compilation"
