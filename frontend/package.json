@@ -21,6 +21,7 @@
     "react-scripts": "4.0.0",
     "react-uuid": "^1.0.2",
     "react-youtube": "^7.13.0",
+    "rewards-lite": "^1.0.5",
     "store": "^2.0.12",
     "typescript": "^4.1.2",
     "web-vitals": "^0.2.4"

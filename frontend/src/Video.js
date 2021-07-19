@@ -20,6 +20,10 @@ import {
 } from "@fortawesome/pro-regular-svg-icons";
 import FancyButton from "./FancyButton";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import Reward from "rewards-lite";
+
+//const endpoint = "http://localhost:7209";
+const endpoint = "";
 
 class Video extends React.Component {
     constructor(props) {
@@ -53,7 +57,7 @@ class Video extends React.Component {
     }
 
     async componentDidMount() {
-        this.videos = (await axios.get("/videos/get", {params: {id: this.state.uuid}})).data || [];
+        this.videos = (await axios.get(`${endpoint}/videos/get`, {params: {id: this.state.uuid}})).data || [];
 
         if (this.vidid) {
             let fvb = this.findVideoById(this.vidid);
@@ -73,6 +77,7 @@ class Video extends React.Component {
     }
 
     previousVideo = function() {
+        this.sa_event("prev_video");
         if (this.canBack()) {
             let prev = this.state.history[this.state.vidIndex - 1];
             window.history.pushState({video: prev}, "", "?v=" + prev);
@@ -91,6 +96,7 @@ class Video extends React.Component {
     }
 
     nextVideo = function(useAll = false) {
+        this.sa_event("next_video");
         // TODO: Add a way for videos to be excluded from next video but still loaded for history's sake (history only keeps id's so needs full records)
         // Actually it doesn't - we could just load the video using it's id but have 0 votes and make it unvoteable.
         let next;
@@ -125,11 +131,13 @@ class Video extends React.Component {
     }.bind(this);
 
     randomUnwatched() {
+        this.sa_event("next_random_from_unwatched");
         let unwatched = this.getUnwatched();
         return unwatched[Math.floor(Math.random() * unwatched.length)];
     }
 
     randomAll() {
+        this.sa_event("next_random_from_all");
         return this.videos[Math.floor(Math.random() * this.videos.length)];
     }
 
@@ -156,14 +164,16 @@ class Video extends React.Component {
     }.bind(this);
 
     resetWatched = function() {
+        this.sa_event("watched_all");
         this.setState({video: this.nextVideo(true), vidIndex: 0});
         store.remove("history");
     }.bind(this);
 
     onError = function() {
+        this.sa_event("video_error");
         const fd = new FormData();
         fd.set("video", this.state.video.id);
-        axios.post("/videos/error", fd).then(() => console.log("Error Reported!"));
+        axios.post(`${endpoint}/videos/error`, fd).then(() => console.log("Error Reported!"));
         this.onVidEnd();
     }.bind(this);
 
@@ -200,6 +210,8 @@ class Video extends React.Component {
     }
 
     castVote = async function (weight) {
+        weight = weight.toString();
+        this.sa_event(`cast_vote_` + ({"-1": "down", "1": "up", "0": "remove"}[weight] || "unknown"));
         const vid_id = this.state.video.id;
         this.setState({votes: false});
 
@@ -207,13 +219,14 @@ class Video extends React.Component {
         fd.set("weight", weight);
         fd.set("id", this.state.uuid);
         fd.set("video", this.state.video.id);
-        const request = await axios.post("/videos/vote", fd);
+        const request = await axios.post(`${endpoint}/videos/vote`, fd);
         if (request.data !== false) {
             if (["-1", "0", "1"].includes(request.data.toString())) {
                 if (this.state.video.id === vid_id) {
                     this.state.video.myvoteweight = request.data.toString();
                     this.videos[this.state.vidIndex].myvoteweight = request.data.toString();
                     this.setState({video: this.state.video});
+                    this.reward.rewardMe();
                 }
             }
         }
@@ -222,19 +235,33 @@ class Video extends React.Component {
 
     showYoutubeBasedFeatures() {
         let hasVid = this.state.video && this.state.video !== "unloaded";
-        let voted = hasVid && (parseFloat(this.state.video.upvotes) + parseFloat(this.state.video.downvotes) > 0);
+        let voted = hasVid && ((parseFloat(this.state.video.upvotes) + parseFloat(this.state.video.downvotes) > 0) || parseInt(this.state.video.myvoteweight) !== 0);
+
+        // Don't load this if video-less
+        if (!hasVid) return null;
+
+        let upvotes = parseInt(this.state.video.upvotes) + (this.state.video.myvoteweight === "1" ? 1 : 0);
+        let downvotes = parseInt(this.state.video.downvotes) + (this.state.video.myvoteweight === "-1" ? 1 : 0);
+        let percentage = (parseFloat(upvotes) / (parseFloat(upvotes) + parseInt(downvotes)) * 100).toFixed(0);
         return (<React.Fragment>
             <FancyButton icon={faArrowUp} enabled={this.fancyButtonEnabled(hasVid, "1")} isGreen={this.fancyButtonIsGreen("1")} onClick={() => this.castVote("1")}>Upvote</FancyButton>
             <FancyButton icon={faArrowDown} enabled={this.fancyButtonEnabled(hasVid, "-1")} isGreen={this.fancyButtonIsGreen("-1")} onClick={() => this.castVote("-1")}>Downvote</FancyButton>
             <FancyButton icon={faTimes} enabled={this.fancyButtonEnabled(hasVid, "0")} isGreen={this.fancyButtonIsGreen("0")} onClick={() => this.castVote("0")}>No Vote</FancyButton>
             {voted ? <div className="votes-info">
-                <p>Upvotes: {this.state.video.upvotes}</p>
-                <p>Downvotes: {this.state.video.downvotes}</p>
-                <p>Liked: {(parseFloat(this.state.video.upvotes) / (parseFloat(this.state.video.upvotes) + parseInt(this.state.video.downvotes)) * 100).toFixed(0)} %</p>
+                <Reward ref={(ref) => { this.reward = ref }} type='confetti' config={{lifetime:100,spread:30,elementCount:20}}/>
+                <p>Upvotes: {upvotes}</p>
+                <p>Downvotes: {downvotes}</p>
+                <p>Liked: {percentage} %</p>
             </div> : <div className="votes-info"><p>Upvotes: 0</p><p>Downvotes: 0</p><p>Liked: 0%</p></div>}
 
             <FancyButton iconElement={hasVid ? <span><Blockies seed={this.state.video.submitter} size={8} /></span> : <span className="blockies" /> } enabled={hasVid} onClick={this.backOnClick}>Contributor</FancyButton>
         </React.Fragment>);
+    }
+
+    sa_event = function (e) {
+        try {
+            window.sa_event(e)
+        } catch (v) {}
     }
 
     canBack = function () {
@@ -248,7 +275,9 @@ class Video extends React.Component {
     toggleSubmitDialog = function() {
         // Pause vid if opening
         if (this.state.ytPlayer && this.state.submitDialog === false) {
-            this.state.ytPlayer.pauseVideo();
+            try {
+                this.state.ytPlayer.pauseVideo();
+            } catch (ignored) {}
         }
 
         // Toggle
@@ -270,10 +299,11 @@ class Video extends React.Component {
     submitDialogSubmit = async event => {
         event.preventDefault();
         event.stopPropagation();
+        this.sa_event("submit_video");
         const fd = new FormData();
         fd.set("id", this.state.uuid);
         fd.set("video", this.state.submitLink);
-        const response = await axios.post("/videos/submit", fd);
+        const response = await axios.post(`${endpoint}/videos/submit`, fd);
         console.log(response.data);
         if (response.data) {
             this.setState({submitLink: "", submitResponse: response.data});
@@ -320,6 +350,7 @@ class Video extends React.Component {
     }
 
     onTogglePassword = function (event) {
+        this.sa_event("show_password");
         event.preventDefault();
         event.stopPropagation();
         this.setState({showPassword: !this.state.showPassword});

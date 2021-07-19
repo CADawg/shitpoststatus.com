@@ -11,7 +11,7 @@ router.get('/get', async function(req, res, next) {
     if (req.query.id === undefined) req.query.id = null;
 
     try {
-        const [rows] = await dbPool.query("SELECT videos.videoid, submitter, SUM(IF(upvotes.weight = 1, 1, 0)) AS upvotes, SUM(IF(upvotes.weight = -1, 1, 0)) AS downvotes, SUM(IF( upvotes.voter = ?, upvotes.weight, 0)) AS myvoteweight FROM `videos` LEFT JOIN upvotes ON upvotes.videoid = videos.videoid WHERE videos.mod_hidden = 0 and videos.errored = 0 GROUP BY videos.videoid;", [req.query.id]);
+        const [rows] = await dbPool.query("SELECT videos.videoid, submitter, SUM(IF(upvotes.weight = 1 and upvotes.voter != ?, 1, 0)) AS upvotes, SUM(IF(upvotes.weight = -1 and upvotes.voter != ?, 1, 0)) AS downvotes, SUM(IF( upvotes.voter = ?, upvotes.weight, 0)) AS myvoteweight FROM `videos` LEFT JOIN upvotes ON upvotes.videoid = videos.videoid WHERE videos.mod_hidden = 0 and videos.errored = 0  GROUP BY videos.videoid;", [req.query.id, req.query.id, req.query.id]);
 
         const json = [];
 

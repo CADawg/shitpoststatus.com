@@ -1,7 +1,9 @@
 import React from 'react';
 import store from "store";
 import qs from "qs";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import './App.scss';
+import {faPlay} from "@fortawesome/pro-regular-svg-icons";
 
 export default class Homepage extends React.Component {
     constructor(props) {
@@ -21,9 +23,20 @@ export default class Homepage extends React.Component {
 
     }
 
+    sa_event = function (e) {
+        try {
+            window.sa_event(e)
+        } catch (v) {}
+    }
+
+    startWatching = function () {
+        this.sa_event("start_watching");
+        window.location.href = "/watch";
+    }.bind(this);
+
     render() {
         return (<div className="homepage">
-            <button className="fancy-button fancy-button__homepage" onClick={function () {window.location.href = "/watch";}}>Get Watching</button>
+            <button className="fancy-button fancy-button__homepage" onClick={this.startWatching}><FontAwesomeIcon icon={faPlay} /> Play Videos</button>
         </div>);
     }
 }
