@@ -1,4 +1,4 @@
-import './App.scss';
+import './Listings.scss';
 import YouTube from "react-youtube";
 import React from "react";
 import axios from "axios";
@@ -49,106 +49,10 @@ class Video extends React.Component {
         this.vidid = qsp.v || false;
 
         this.state.nameIdenticon = hex.stringify(sha256(this.state.uuid));
-
-        if (store.get("history")) {
-            this.state.history = store.get("history");
-            this.state.vidIndex = this.state.history.length - 1;
-        }
     }
 
     async componentDidMount() {
         this.videos = (await axios.get(`${endpoint}/videos/get`, {params: {id: this.state.uuid}})).data || [];
-
-        if (this.vidid) {
-            let fvb = this.findVideoById(this.vidid);
-            if (fvb) {
-                if (this.state.history.includes(this.vidid)) {
-                    this.setState({vidIndex: this.state.history.indexOf(this.vidid), video: fvb});
-                } else {
-                    this.state.history.push(fvb.id);
-                    this.setState({history: this.state.history, vidIndex: this.state.vidIndex + 1, video: fvb});
-                }
-            } else {
-                this.setState({video: this.nextVideo()});
-            }
-        } else {
-            this.setState({video: this.nextVideo()});
-        }
-    }
-
-    previousVideo = function() {
-        this.sa_event("prev_video");
-        if (this.canBack()) {
-            let prev = this.state.history[this.state.vidIndex - 1];
-            window.history.pushState({video: prev}, "", "?v=" + prev);
-            this.setState({vidIndex: this.state.vidIndex - 1, video: this.findVideoById(prev)});
-        }
-    }.bind(this);
-
-    findVideoById(videoId) {
-        for (let i = 0; i < this.videos.length; i++) {
-            if (this.videos[i].id === videoId) {
-                return this.videos[i];
-            }
-        }
-
-        return false;
-    }
-
-    nextVideo = function(useAll = false) {
-        this.sa_event("next_video");
-        // TODO: Add a way for videos to be excluded from next video but still loaded for history's sake (history only keeps id's so needs full records)
-        // Actually it doesn't - we could just load the video using it's id but have 0 votes and make it unvoteable.
-        let next;
-        if (this.state.vidIndex >= this.state.history.length - 1 || useAll === true) {
-            next = useAll === true ? this.randomAll() : this.randomUnwatched();
-            if (next) {
-                let addToVidIndex = 1;
-                let history = useAll === true ? [] : this.state.history;
-                // This code seems to break history more than I'd like
-                //if (popCurrent) { // delete current bc errored
-                //    let index = history.indexOf(this.state.video.id);
-                //    if (index > -1) {
-                //        history.splice(index, 1);
-                //        addToVidIndex = 0;
-                //    }
-                //}
-                history.push(next.id);
-                store.set("history", history);
-                window.history.pushState({video: next.id}, "", "?v=" + next.id);
-                this.setState({history: history, vidIndex: this.state.vidIndex + addToVidIndex, video: next});
-            } else {
-                window.history.pushState({video: null}, "", "?");
-                this.setState({video: null, vidIndex: this.state.vidIndex + 1});
-            }
-        } else {
-            next = this.findVideoById(this.state.history[this.state.vidIndex + 1]);
-            window.history.pushState({video: next.id}, "", "?v=" + next.id);
-            this.setState({video: {...next}, vidIndex: this.state.vidIndex + 1});
-        }
-
-        return next;
-    }.bind(this);
-
-    randomUnwatched() {
-        this.sa_event("next_random_from_unwatched");
-        let unwatched = this.getUnwatched();
-        return unwatched[Math.floor(Math.random() * unwatched.length)];
-    }
-
-    randomAll() {
-        this.sa_event("next_random_from_all");
-        return this.videos[Math.floor(Math.random() * this.videos.length)];
-    }
-
-    getUnwatched() {
-        let unwatched = [];
-        for (let i = 0; i < this.videos.length; i++) {
-            if (!this.state.history.includes(this.videos[i].id)) {
-                unwatched.push(this.videos[i]);
-            }
-        }
-        return unwatched;
     }
 
     onVidEnd = function () {
@@ -157,16 +61,6 @@ class Video extends React.Component {
                 this.nextVideo();
             }
         }
-    }.bind(this);
-
-    canNext = function () {
-        return this.getUnwatched().length > 0 || this.state.vidIndex < this.state.history.length;
-    }.bind(this);
-
-    resetWatched = function() {
-        this.sa_event("watched_all");
-        this.setState({video: this.nextVideo(true), vidIndex: 0});
-        store.remove("history");
     }.bind(this);
 
     onError = function() {
