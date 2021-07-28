@@ -29,6 +29,52 @@ router.get('/get', async function(req, res, next) {
     }
 });
 
+/* GET home page. */
+router.get('/get/top', async function(req, res, next) {
+    if (req.query.id === undefined) req.query.id = null;
+
+    try {
+        const [rows] = await dbPool.query("SELECT videos.videoid, submitter, title, keywords, SUM(IF(upvotes.weight = 1 and upvotes.voter != ?, 1, 0)) AS upvotes, SUM(IF(upvotes.weight = -1 and upvotes.voter != ?, 1, 0)) AS downvotes, COALESCE(SUM(upvotes.weight),0) as score, SUM(IF( upvotes.voter = ?, upvotes.weight, 0)) AS myvoteweight FROM `videos` LEFT JOIN upvotes ON upvotes.videoid = videos.videoid WHERE videos.mod_hidden = 0 and videos.errored = 0 GROUP BY videos.videoid ORDER BY score DESC;", [req.query.id, req.query.id, req.query.id]);
+
+        const json = [];
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const submitter = crypto.createHash("sha256").update(row.submitter).digest("hex");
+
+            json.push({id: row.videoid, submitter,upvotes: row.upvotes, downvotes: row.downvotes, title: row.title, keywords: row.keywords, score: row.score, myvoteweight: row.myvoteweight});
+        }
+
+        res.json(json).end();
+    } catch (e) {
+        console.log(e);
+        res.json([]).end();
+    }
+});
+
+/* GET home page. */
+router.get('/get/new', async function(req, res, next) {
+    if (req.query.id === undefined) req.query.id = null;
+
+    try {
+        const [rows] = await dbPool.query("SELECT videos.videoid, submitter, title, keywords, SUM(IF(upvotes.weight = 1 and upvotes.voter != ?, 1, 0)) AS upvotes, SUM(IF(upvotes.weight = -1 and upvotes.voter != ?, 1, 0)) AS downvotes, COALESCE(SUM(upvotes.weight),0) as score, SUM(IF( upvotes.voter = ?, upvotes.weight, 0)) AS myvoteweight FROM `videos` LEFT JOIN upvotes ON upvotes.videoid = videos.videoid WHERE videos.mod_hidden = 0 and videos.errored = 0 GROUP BY videos.videoid ORDER BY id DESC;", [req.query.id, req.query.id, req.query.id]);
+
+        const json = [];
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const submitter = crypto.createHash("sha256").update(row.submitter).digest("hex");
+
+            json.push({id: row.videoid, submitter,upvotes: row.upvotes, downvotes: row.downvotes, title: row.title, keywords: row.keywords, score: row.score, myvoteweight: row.myvoteweight});
+        }
+
+        res.json(json).end();
+    } catch (e) {
+        console.log(e);
+        res.json([]).end();
+    }
+});
+
 function anyUndefined(...params) {
     for (let v in params) if (params.hasOwnProperty(v) && v === undefined) return true;
     return false;
@@ -84,8 +130,14 @@ router.post("/submit", async function(req, res, next) {
                 return res.send("Couldn't get youtube video ID from URL.").end();
             }
 
+            let title, keywords, description;
+
             try {
                 const videoInfo = await YouTubeDownloader.getInfo(video);
+
+                title = videoInfo["player_response"].videoDetails.title || null;
+                keywords = videoInfo["player_response"].videoDetails.keywords || null;
+                description = videoInfo["player_response"].videoDetails.shortDescription || null;
 
                 if (parseInt(videoInfo.videoDetails.lengthSeconds) > 120) {
                     return res.send("Videos can't be longer than 2 Minutes.").end();
@@ -102,8 +154,10 @@ router.post("/submit", async function(req, res, next) {
 
             const [rows] = await dbPool.query("SELECT * FROM videos WHERE videoid=?", [video]);
 
+            if (keywords !== null) keywords = keywords.join(",");
+
             if (rows.length === 0) {
-                await dbPool.query("INSERT INTO videos (videoid, submitter) VALUES (?, ?);", [video, id]);
+                await dbPool.query("INSERT INTO videos (videoid, submitter, title, description, keywords) VALUES (?, ?, ?, ?, ?);", [video, id, title, description, keywords]);
                 return res.send("Thank you, your video has been added!").end();
             } else {
                 return res.send("Somebody else has already added that video.").end();
@@ -132,8 +186,6 @@ router.post("/error", async function(req, res, next) {
 
             try {
                 const videoInfo = await YouTubeDownloader.getInfo(video);
-
-                console.log(videoInfo);
 
                 if (!videoInfo.player_response.playabilityStatus.playableInEmbed) {
                     await dbPool.query("UPDATE videos SET errored = 1 WHERE videoid=?", [video]);

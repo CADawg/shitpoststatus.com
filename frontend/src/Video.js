@@ -21,9 +21,9 @@ import {
 import FancyButton from "./FancyButton";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import Reward from "rewards-lite";
+import {getConfigValue} from "./utils";
 
-//const endpoint = "http://localhost:7209";
-const endpoint = "";
+const endpoint = getConfigValue("endpoint");
 
 class Video extends React.Component {
     constructor(props) {
