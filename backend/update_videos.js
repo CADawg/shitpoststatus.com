@@ -8,15 +8,15 @@ const {dbPool} = require("./bin/utils");
     for (let i = 0; i < rows.length; i++) {
         try {
             console.log(rows[i].videoid);
-            const videoInfo = await YouTubeDownloader.getInfo(rows[i].videoid);
+            const videoInfo = await YouTubeDownloader.getBasicInfo(rows[i].videoid);
 
             let title, keywords, description;
 
-            title = videoInfo["player_response"].videoDetails.title || null;
-            keywords = videoInfo["player_response"].videoDetails.keywords || null;
-            description = videoInfo["player_response"].videoDetails.shortDescription || null;
+            title = videoInfo.videoDetails.title || null;
+            keywords = videoInfo.videoDetails.keywords || null;
+            description = videoInfo.videoDetails.shortDescription || null;
 
-            if (keywords !== null) keywords = keywords.join(",");
+            if (keywords ?? false) keywords = keywords.join(",");
 
             await dbPool.query("UPDATE videos SET title = ?, keywords = ?, description = ? WHERE videoid=?", [title, keywords, description, rows[i].videoid]);
         } catch (e) {
