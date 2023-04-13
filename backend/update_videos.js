@@ -14,7 +14,7 @@ const {dbPool} = require("./bin/utils");
 
             title = videoInfo.videoDetails.title || null;
             keywords = videoInfo.videoDetails.keywords || null;
-            description = videoInfo.videoDetails.shortDescription || null;
+            description = videoInfo.videoDetails.description || null;
 
             if (keywords ?? false) keywords = keywords.join(",");
 
