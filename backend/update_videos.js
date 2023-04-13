@@ -3,7 +3,7 @@ const YouTubeDownloader = require("ytdl-core");
 const {dbPool} = require("./bin/utils");
 
 (async function () {
-    const [rows] = await dbPool.query("SELECT videoid FROM videos WHERE title is null and errored = 0;");
+    const [rows] = await dbPool.query("SELECT videoid FROM videos WHERE title is null and errored = 0 and mod_hidden = 0;");
 
     for (let i = 0; i < rows.length; i++) {
         try {
