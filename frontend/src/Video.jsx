@@ -1,7 +1,6 @@
 import './App.scss';
 import YouTube from "react-youtube";
 import React from "react";
-import axios from "axios";
 import store from "store";
 import qs from 'qs';
 import Blockies from '@pacta-app/react-blockies';
@@ -56,7 +55,8 @@ class Video extends React.Component {
     }
 
     async componentDidMount() {
-        this.videos = (await axios.get(`${endpoint}/videos/get`, {params: {id: this.state.uuid}})).data || [];
+        const response = await fetch(`${endpoint}/videos/get?id=${this.state.uuid}`);
+        this.videos = await response.json() || [];
 
         if (this.vidid) {
             let fvb = this.findVideoById(this.vidid);
@@ -172,7 +172,7 @@ class Video extends React.Component {
         this.sa_event("video_error");
         const fd = new FormData();
         fd.set("video", this.state.video.id);
-        axios.post(`${endpoint}/videos/error`, fd).then(() => console.log("Error Reported!"));
+        fetch(`${endpoint}/videos/error`, {method: 'POST', body: fd}).then(() => console.log("Error Reported!"));
         this.onVidEnd();
     }.bind(this);
 
@@ -218,8 +218,9 @@ class Video extends React.Component {
         fd.set("weight", weight);
         fd.set("id", this.state.uuid);
         fd.set("video", this.state.video.id);
-        const request = await axios.post(`${endpoint}/videos/vote`, fd);
-        if (request.data !== false) {
+        const response = await fetch(`${endpoint}/videos/vote`, {method: 'POST', body: fd});
+        const request = await response.json();
+        if (request !== false) {
             if (["-1", "0", "1"].includes(request.data.toString())) {
                 if (this.state.video.id === vid_id) {
                     this.state.video.myvoteweight = request.data.toString();
@@ -302,10 +303,11 @@ class Video extends React.Component {
         const fd = new FormData();
         fd.set("id", this.state.uuid);
         fd.set("video", this.state.submitLink);
-        const response = await axios.post(`${endpoint}/videos/submit`, fd);
-        console.log(response.data);
-        if (response.data) {
-            this.setState({submitLink: "", submitResponse: response.data});
+        const response = await fetch(`${endpoint}/videos/submit`, {method: 'POST', body: fd});
+        const data = await response.json();
+        console.log(data);
+        if (data) {
+            this.setState({submitLink: "", submitResponse: data});
         }
     }
 

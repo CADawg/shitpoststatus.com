@@ -1,6 +1,5 @@
 import './Listings.scss';
 import React from "react";
-import axios from "axios";
 import store from "store";
 import qs from 'qs';
 import sha256 from 'crypto-js/sha256';
@@ -34,8 +33,10 @@ class Video extends React.Component {
     }
 
     async componentDidMount() {
-        this.setState({videos: (await axios.get(`${endpoint}/videos/get/${this.state.sort}`, {params: {id: this.state.uuid}})).data || []});
-        console.log(this.state.videos);
+        const response = await fetch(`${endpoint}/videos/get/${this.state.sort}?id=${this.state.uuid}`);
+        const videos = await response.json();
+        this.setState({videos: videos || []});
+        console.log(videos);
     }
 
     render () {
