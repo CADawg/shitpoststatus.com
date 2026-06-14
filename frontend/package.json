@@ -19,9 +19,9 @@
     "web-vitals": "^4.2.4"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^6.0.2",
     "sass": "^1.83.4",
-    "vite": "^6.4.2"
+    "vite": "^8.0.16"
   },
   "scripts": {
     "start": "vite",
