@@ -13,7 +13,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-rewards": "^2.1.0",
-    "react-router-dom": "^7.18.1",
+    "react-router-dom": "^7.18.2",
     "react-youtube": "^10.1.0",
     "store": "^2.0.12",
     "web-vitals": "^4.2.4"
